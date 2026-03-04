@@ -1,0 +1,99 @@
+[
+  {
+    "source": "wordstream_facebook_ads_benchmarks",
+    "platform": "meta_ads",
+    "url": "https://www.wordstream.com/blog/ws/facebook-advertising-benchmarks",
+    "wait_for_selector": "body",
+    "caption_like": null,
+    "field_map": {
+      "industry": "Industry",
+      "ctr": "Average CTR",
+      "conversion_rate": "Average CVR",
+      "cpc": "Average CPC",
+      "cpa": "Average CPA"
+    },
+    "default_ad_format": "feed",
+    "unit_notes": "WordStream Facebook Ads benchmarks by industry."
+  },
+  {
+    "source": "wordstream_google_ads_ctr",
+    "platform": "google_ads",
+    "url": "https://www.wordstream.com/blog/ws/google-ads-industry-benchmarks",
+    "wait_for_selector": "body",
+    "caption_like": null,
+    "field_map": {
+      "industry": "Industry",
+      "ctr": "CTR",
+      "conversion_rate": "Conv. Rate",
+      "cpc": "Avg. CPC",
+      "cpa": "Cost / Conv."
+    },
+    "default_ad_format": "search",
+    "unit_notes": "Values are typically Google Ads Search benchmarks; verify report context."
+  },
+  {
+    "source": "hubspot_marketing_benchmarks",
+    "platform": "other",
+    "url": "https://blog.hubspot.com/marketing/marketing-statistics",
+    "wait_for_selector": "body",
+    "caption_like": null,
+    "field_map": {
+      "industry": "Industry",
+      "ctr": "CTR",
+      "conversion_rate": "Conversion Rate",
+      "cpc": "CPC",
+      "cpa": "CPA"
+    },
+    "default_ad_format": null,
+    "unit_notes": "HubSpot pages are not always table-based; point to a specific report URL if needed."
+  },
+  {
+    "source": "meta_ads_benchmarks_public",
+    "platform": "meta_ads",
+    "url": "https://www.facebook.com/business/news/insights",
+    "wait_for_selector": "body",
+    "caption_like": null,
+    "field_map": {
+      "industry": "Industry",
+      "ctr": "CTR",
+      "conversion_rate": "Conversion Rate",
+      "cpc": "CPC",
+      "cpa": "CPA"
+    },
+    "default_ad_format": null,
+    "unit_notes": "May require authentication or a different public URL; treat as configurable."
+  },
+  {
+    "source": "google_ads_benchmarks_public",
+    "platform": "google_ads",
+    "url": "https://support.google.com/google-ads/answer/6167112",
+    "wait_for_selector": "body",
+    "caption_like": null,
+    "field_map": {
+      "industry": "Industry",
+      "ctr": "CTR",
+      "conversion_rate": "Conversion rate",
+      "cpc": "Avg. CPC",
+      "cpa": "Avg. CPA"
+    },
+    "default_ad_format": null,
+    "unit_notes": "Google Help Center pages rarely provide industry tables; update to a specific benchmark page."
+  },
+  {
+    "source": "statista_marketing_datasets",
+    "platform": "other",
+    "url": "https://www.statista.com/markets/413/topic/470/advertising-marketing/",
+    "wait_for_selector": "body",
+    "caption_like": null,
+    "field_map": {
+      "industry": "Industry",
+      "ctr": "CTR",
+      "conversion_rate": "Conversion rate",
+      "cpc": "CPC",
+      "cpa": "CPA"
+    },
+    "default_ad_format": null,
+    "unit_notes": "Often gated; use Playwright persistent profile if you have access."
+  }
+]
+

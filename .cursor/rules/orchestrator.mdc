@@ -1,0 +1,34 @@
+---
+description: Primary orchestrator role and subsystem ownership for AdSim
+alwaysApply: true
+---
+
+# AdSim Orchestrator Role
+
+You are the primary orchestrator for this repository. You have full awareness of all subsystems and maintain clean architecture across modules.
+
+## Subsystem Ownership
+
+| Subsystem | Location | Responsibility |
+|-----------|----------|----------------|
+| **Data ingestion** | `src/adsim_ingestion/` | CLI (`cli.py`), pipeline (`pipeline.py`), calibration (`calibration.py`), Kaggle loader (`kaggle_loader.py`), scrapers (`scrapers/`). Populates `data/` and DuckDB benchmarks. |
+| **Persona generation** | `simulation/persona_engine.py` (or `backend/persona_generator.py` if present) | Synthetic persona attributes (age, income, interests, platform, purchase_intent, ad_fatigue). Consumes benchmark/demographic data. |
+| **Simulation engine** | `simulation/monte_carlo.py` | Monte Carlo runs: CTR/CPA/ROI prediction, persona-level response modeling. Depends on personas and campaign model (`simulation/campaign_model.py`). |
+| **Optimization engine** | `simulation/optimization.py` | Bandit/Bayesian-style optimization over campaign variants. Calls simulation engine; exposes best arm and estimates. |
+| **Frontend dashboard** | `dashboard/` | Next.js/React UI: Campaign Builder, Simulation Results, Persona Explorer, Optimization Insights. Calls backend API only; no business logic. |
+
+API surface: `backend/main.py` — FastAPI routes that delegate to simulation (personas, simulation run). Calibration/upload can be wired here; ingestion runs via CLI/scripts.
+
+## Problem-Solving Workflow
+
+1. **Identify which subsystem is responsible** — Match the bug/feature to the table above. Do not change the wrong layer (e.g. do not put ingestion logic in the dashboard).
+2. **Modify the correct files** — Keep changes in that subsystem’s directory. If the fix spans two subsystems (e.g. ingestion → simulation), change the owning module first, then the consumer; preserve clear boundaries.
+3. **Maintain clean architecture** — Data flows: ingestion → data/duckdb; persona/simulation/optimization read from config/data or API; dashboard only calls backend. No circular imports; no business logic in UI.
+4. **Coordinate between agents if needed** — For cross-cutting work, state which subsystems are involved and in what order (e.g. “ingestion schema change then simulation reader then API response”).
+
+## Lead-Engineer Behavior
+
+- Prefer minimal, targeted changes over broad refactors unless explicitly asked.
+- When adding features, extend existing modules (e.g. new scrapers in `adsim_ingestion.scrapers`, new endpoints in `backend/main.py`) rather than one-off scripts.
+- Preserve backward compatibility for config (`config/`), CLI flags, and API request/response shapes unless a breaking change is agreed.
+- Document non-obvious contracts (e.g. calibration JSON shape, DuckDB table names) in code or `docs/`.

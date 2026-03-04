@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root {
+  --bg: 240 10% 98%;
+  --fg: 240 10% 10%;
+
+  --card: 0 0% 100%;
+  --card-fg: 240 10% 10%;
+  --border: 240 7% 85%;
+
+  --muted: 240 6% 92%;
+  --muted-fg: 240 4% 45%;
+
+  --accent: 262 83% 58%;
+  --accent-2: 190 95% 45%;
+
+  --shadow: 240 10% 10%;
+  --ring: 262 83% 58%;
+}
+
+@theme inline {
+  --color-background: hsl(var(--bg));
+  --color-foreground: hsl(var(--fg));
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+.dark {
+  --bg: 240 10% 5%;
+  --fg: 0 0% 98%;
+
+  --card: 240 8% 10%;
+  --card-fg: 0 0% 98%;
+  --border: 240 6% 22%;
+
+  --muted: 240 6% 16%;
+  --muted-fg: 240 6% 70%;
+
+  --shadow: 0 0% 0%;
+}
+
+body {
+  background: hsl(var(--bg));
+  color: hsl(var(--fg));
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* Subtle AI-startup background (works with glass cards) */
+.app-surface {
+  background:
+    radial-gradient(1200px 700px at 20% 10%, hsl(var(--accent) / 0.18), transparent 60%),
+    radial-gradient(900px 600px at 80% 20%, hsl(var(--accent-2) / 0.16), transparent 55%),
+    radial-gradient(1100px 800px at 50% 90%, hsl(224 85% 55% / 0.10), transparent 55%),
+    linear-gradient(180deg, hsl(var(--bg)) 0%, hsl(var(--bg)) 100%);
+}
+
+.glass {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card) / 0.65) 0%,
+    hsl(var(--card) / 0.35) 100%
+  );
+  border: 1px solid hsl(var(--border) / 0.55);
+  box-shadow:
+    0 20px 60px hsl(var(--shadow) / 0.22),
+    inset 0 1px 0 hsl(0 0% 100% / 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.glass:hover {
+  border-color: hsl(var(--border) / 0.85);
+  transform: translateY(-1px);
+}
+
+.noise {
+  position: relative;
+}
+.noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.08;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass:hover {
+    transform: none;
+  }
+}

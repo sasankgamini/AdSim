@@ -1,0 +1,2 @@
+[console_scripts]
+adsim-ingest = adsim_ingestion.cli:app
