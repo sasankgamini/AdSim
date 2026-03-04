@@ -1,0 +1,21 @@
+# Render Blueprint: AdSim backend API
+# https://render.com/docs/blueprint-spec
+# Connect this repo and Render will create the web service.
+
+services:
+  - type: web
+    name: adsim-api
+    runtime: python
+    region: oregon
+
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+
+    # Repo root is used by default so backend/ and simulation/ are on PYTHONPATH.
+
+    # Health check
+    healthCheckPath: /health

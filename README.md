@@ -4,6 +4,14 @@ AdSim is a fully local, agent-based simulation platform for exploring how ad cam
 
 All components run locally with **no paid APIs**. External data comes from open/public benchmark datasets and optional user uploads.
 
+| Link | URL |
+|------|-----|
+| **Repository** | [github.com/sasankgamini/AdSim](https://github.com/sasankgamini/AdSim) |
+| **Live dashboard** | Deploy with [Vercel](https://vercel.com) (set root to `dashboard`) — then add your URL here and in the repo **About → Website** |
+| **Live API** | Deploy with [Render](https://render.com) using the included `render.yaml` — then add your API URL here |
+
+See **[Deployment](docs/DEPLOYMENT.md)** for step-by-step deploy instructions and GitHub website setup.
+
 ---
 
 ## Quick start — run the app
@@ -37,6 +45,15 @@ npm run dev
 - **Backend API** — Use **http://localhost:8000/docs** to try:
   - `POST /personas/generate` — body: `{"n_personas": 500}` to get synthetic personas.
   - `POST /simulation/run` — body: `campaign` (name, objective, target_platform, creative_type, budget, ad_copy, creative_description, target_interests, target_age_min/max) and either `personas` (array) or `n_personas` (e.g. 1000). Returns CTR/ROI distributions and expected values.
+
+---
+
+## Deploy (Vercel + Render)
+
+- **Dashboard:** Import this repo on [Vercel](https://vercel.com), set **Root Directory** to `dashboard`, and deploy. Set the repo **About → Website** to your Vercel URL so the GitHub link points to the live app.
+- **Backend:** Import this repo on [Render](https://render.com); the `render.yaml` blueprint will create the API service. Use the resulting API URL as needed (e.g. for `NEXT_PUBLIC_API_URL` when wiring the dashboard to the API).
+
+Full steps: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
 ---
 
