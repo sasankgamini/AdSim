@@ -20,7 +20,7 @@ Deploy the **dashboard** (Next.js) to Vercel and the **backend API** (FastAPI) t
 
 ## 2. Dashboard (Vercel) — deployed
 
-The dashboard is deployed at: **https://dashboard-seven-ebon-75.vercel.app**
+The dashboard is deployed at: **https://adsim-dashboard.vercel.app**
 
 To redeploy or connect a different repo: go to [vercel.com](https://vercel.com) → **Add New → Project** → import the `AdSim` repository → set **Root Directory** to `dashboard` → Deploy.
 
@@ -33,7 +33,7 @@ To redeploy or connect a different repo: go to [vercel.com](https://vercel.com) 
 ## 3. GitHub repository links
 
 - In your repo on GitHub, go to **Settings → General**.
-- Under **Website**, paste: **https://dashboard-seven-ebon-75.vercel.app** so the repo’s “About” link goes to the live app.
+- Under **Website**, paste: **https://adsim-dashboard.vercel.app** so the repo’s “About” link goes to the live app.
 - Optionally add **Description** and **Topics** (e.g. `simulation`, `advertising`, `monte-carlo`).
 
 ---
