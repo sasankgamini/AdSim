@@ -18,15 +18,13 @@ Deploy the **dashboard** (Next.js) to Vercel and the **backend API** (FastAPI) t
 
 ---
 
-## 2. Deploy dashboard (Vercel)
+## 2. Dashboard (Vercel) — deployed
 
-1. Go to [vercel.com](https://vercel.com) and sign in with GitHub.
-2. **Add New → Project** and import the `AdSim` repository.
-3. Set **Root Directory** to `dashboard` (important).
-4. Leave build settings as default (Vercel detects Next.js). Deploy.
-5. Note your dashboard URL, e.g. `https://adsim-dashboard.vercel.app`.
+The dashboard is deployed at: **https://dashboard-seven-ebon-75.vercel.app**
 
-**Optional:** To point the dashboard at your deployed API later (when UI calls are wired), add an environment variable in Vercel:
+To redeploy or connect a different repo: go to [vercel.com](https://vercel.com) → **Add New → Project** → import the `AdSim` repository → set **Root Directory** to `dashboard` → Deploy.
+
+**Optional:** To point the dashboard at your deployed API later (when UI calls are wired), add an environment variable in the Vercel project:
 - **Name:** `NEXT_PUBLIC_API_URL`
 - **Value:** `https://your-api.onrender.com` (your Render API URL).
 
@@ -35,7 +33,7 @@ Deploy the **dashboard** (Next.js) to Vercel and the **backend API** (FastAPI) t
 ## 3. GitHub repository links
 
 - In your repo on GitHub, go to **Settings → General**.
-- Under **Website**, paste your **dashboard URL** (e.g. `https://adsim-dashboard.vercel.app`) so the repo’s “About” link goes to the live app.
+- Under **Website**, paste: **https://dashboard-seven-ebon-75.vercel.app** so the repo’s “About” link goes to the live app.
 - Optionally add **Description** and **Topics** (e.g. `simulation`, `advertising`, `monte-carlo`).
 
 ---

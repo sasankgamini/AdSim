@@ -7,10 +7,10 @@ All components run locally with **no paid APIs**. External data comes from open/
 | Link | URL |
 |------|-----|
 | **Repository** | [github.com/sasankgamini/AdSim](https://github.com/sasankgamini/AdSim) |
-| **Live dashboard** | Deploy with [Vercel](https://vercel.com) (set root to `dashboard`) — then add your URL here and in the repo **About → Website** |
+| **Live dashboard** | **[dashboard-seven-ebon-75.vercel.app](https://dashboard-seven-ebon-75.vercel.app)** |
 | **Live API** | Deploy with [Render](https://render.com) using the included `render.yaml` — then add your API URL here |
 
-See **[Deployment](docs/DEPLOYMENT.md)** for step-by-step deploy instructions and GitHub website setup.
+Set the repo **About → Website** to the live dashboard URL so the GitHub link points to the app. See **[Deployment](docs/DEPLOYMENT.md)** for API deploy steps and GitHub setup.
 
 ---
 
@@ -50,7 +50,7 @@ npm run dev
 
 ## Deploy (Vercel + Render)
 
-- **Dashboard:** Import this repo on [Vercel](https://vercel.com), set **Root Directory** to `dashboard`, and deploy. Set the repo **About → Website** to your Vercel URL so the GitHub link points to the live app.
+- **Dashboard:** **Live at [dashboard-seven-ebon-75.vercel.app](https://dashboard-seven-ebon-75.vercel.app).** Set the repo **About → Website** to that URL so the GitHub link points to the app.
 - **Backend:** Import this repo on [Render](https://render.com); the `render.yaml` blueprint will create the API service. Use the resulting API URL as needed (e.g. for `NEXT_PUBLIC_API_URL` when wiring the dashboard to the API).
 
 Full steps: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
