@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Wand2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Wand2, Loader2, ChevronDown, ChevronUp, BrainCircuit } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   type CampaignPayload,
   type SimulationResult,
+  type CreativeResponse,
+  type CreativeVariant,
   runSimulation,
+  generateCreative,
 } from "@/lib/api";
 import { exampleCampaigns } from "@/lib/example-campaigns";
 import { cn } from "@/lib/utils";
@@ -29,6 +32,59 @@ export default function CampaignBuilderPage() {
     exampleCampaigns[0].id,
   );
   const [showExamples, setShowExamples] = React.useState(true);
+
+  // AI creative generation
+  const [productName, setProductName] = React.useState("");
+  const [productDesc, setProductDesc] = React.useState("");
+  const [tone, setTone] = React.useState("professional");
+  const [aiLoading, setAiLoading] = React.useState(false);
+  const [aiResult, setAiResult] = React.useState<CreativeResponse | null>(null);
+  const [aiError, setAiError] = React.useState<string | null>(null);
+
+  async function handleGenerateCreative() {
+    if (!productName.trim()) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await generateCreative({
+        product_name: productName,
+        product_description: productDesc,
+        objective: campaign.objective,
+        target_platform: campaign.target_platform,
+        creative_type: campaign.creative_type,
+        target_interests: campaign.target_interests,
+        budget: campaign.budget,
+        tone,
+        n_variants: 3,
+      });
+      setAiResult(res);
+      // Auto-load the suggested campaign into the form
+      if (res.suggested_campaign) {
+        const sc = res.suggested_campaign;
+        setCampaign((c) => ({
+          ...c,
+          name: sc.name ?? c.name,
+          ad_copy: sc.ad_copy ?? c.ad_copy,
+          creative_description: sc.creative_description ?? c.creative_description,
+          target_interests: (sc.target_interests as string[]) ?? c.target_interests,
+          target_age_min: sc.target_age_min ?? c.target_age_min,
+          target_age_max: sc.target_age_max ?? c.target_age_max,
+        }));
+      }
+    } catch (err: unknown) {
+      setAiError(err instanceof Error ? err.message : "Creative generation failed.");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function applyVariant(v: CreativeVariant) {
+    setCampaign((c) => ({
+      ...c,
+      ad_copy: v.ad_copy,
+      creative_description: v.creative_description,
+    }));
+  }
 
   function loadExample(id: string) {
     const ex = exampleCampaigns.find((e) => e.id === id);
@@ -120,6 +176,105 @@ export default function CampaignBuilderPage() {
             ))}
           </CardContent>
         )}
+      </Card>
+
+      {/* AI Creative Generator */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <BrainCircuit size={18} />
+              Generate Creative with AI
+            </CardTitle>
+            <div className="text-sm text-[hsl(var(--muted-fg))]">
+              Describe your product and Gemini will generate ad copy, creative descriptions, and a campaign spec optimized for the simulation engine.
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Product name</div>
+              <Input
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+                placeholder="e.g. FitTrack Pro"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Tone</div>
+              <Select value={tone} onChange={(e) => setTone(e.target.value)}>
+                <option value="professional">Professional</option>
+                <option value="playful">Playful</option>
+                <option value="urgent">Urgent</option>
+                <option value="minimal">Minimal</option>
+                <option value="bold">Bold</option>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">What does it do?</div>
+            <textarea
+              className="focus-ring w-full rounded-xl border border-[hsl(var(--border)/0.7)] bg-transparent px-3 py-2 text-sm"
+              rows={2}
+              value={productDesc}
+              onChange={(e) => setProductDesc(e.target.value)}
+              placeholder="AI-powered fitness app with personalized 10-minute workouts and nutrition tracking"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={handleGenerateCreative} disabled={aiLoading || !productName.trim()}>
+              {aiLoading ? <Loader2 size={16} className="animate-spin" /> : <BrainCircuit size={16} />}
+              {aiLoading ? "Generating with Gemini…" : "Generate Creative"}
+            </Button>
+            <span className="text-xs text-[hsl(var(--muted-fg))]">
+              Uses platform, objective, interests, and budget from the form below.
+            </span>
+          </div>
+
+          {aiError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{aiError}</div>
+          )}
+
+          {aiResult && (
+            <div className="space-y-4">
+              {aiResult.strategy_notes && (
+                <div className="rounded-xl border border-[hsl(var(--border)/0.6)] bg-[hsl(var(--card)/0.35)] p-3">
+                  <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Strategy Notes</div>
+                  <div className="mt-1 text-sm text-[hsl(var(--muted-fg))]">{aiResult.strategy_notes}</div>
+                </div>
+              )}
+              <div className="space-y-3">
+                {aiResult.variants.map((v, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-2xl border border-[hsl(var(--border)/0.6)] bg-[hsl(var(--card)/0.35)] p-4 transition-all hover:-translate-y-px hover:border-[hsl(var(--border))]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-2">
+                        <div className="text-sm font-semibold">{v.variant_name}</div>
+                        <div className="text-sm font-medium text-[hsl(var(--fg))]">&ldquo;{v.headline}&rdquo;</div>
+                        <div className="text-sm text-[hsl(var(--muted-fg))]">{v.ad_copy}</div>
+                        <div className="text-xs text-[hsl(var(--muted-fg))]">
+                          <span className="font-medium">Visual:</span> {v.creative_description}
+                        </div>
+                        <div className="text-xs text-[hsl(var(--muted-fg))]">
+                          <span className="font-medium">Why it works:</span> {v.rationale}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge tone="accent">CTA: {v.cta}</Badge>
+                        <Button size="sm" variant="secondary" onClick={() => applyVariant(v)}>
+                          Use this
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

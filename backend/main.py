@@ -75,6 +75,14 @@ async def simulation_endpoint(payload: SimulationRunBody) -> dict:
     return run_campaign_simulation(req)
 
 
+from backend.creative_generator import CreativeRequest, generate_creative
+
+
+@app.post("/creative/generate")
+async def creative_endpoint(payload: CreativeRequest) -> dict:
+    return await generate_creative(payload)
+
+
 if __name__ == "__main__":
     import uvicorn
 

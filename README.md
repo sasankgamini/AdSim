@@ -2,7 +2,7 @@
 
 AdSim is a fully local, agent-based simulation platform for exploring how ad campaigns might perform **before** spending budget. It generates synthetic personas from public benchmark distributions, runs Monte Carlo simulations to estimate CTR/CPA/ROI, and layers simple reinforcement-style optimization to suggest better audiences, creatives, and platform mixes.
 
-All components run locally with **no paid APIs**. External data comes from open/public benchmark datasets and optional user uploads.
+All components run locally with **no paid APIs** (Gemini free tier is optional for AI creative generation). External data comes from open/public benchmark datasets and optional user uploads.
 
 | Link | URL |
 |------|-----|
@@ -45,6 +45,7 @@ npm run dev
 - **Backend API** — Use **http://localhost:8000/docs** to try:
   - `POST /personas/generate` — body: `{"n_personas": 500}` to get synthetic personas.
   - `POST /simulation/run` — body: `campaign` (name, objective, target_platform, creative_type, budget, ad_copy, creative_description, target_interests, target_age_min/max) and either `personas` (array) or `n_personas` (e.g. 1000). Returns CTR/ROI distributions and expected values.
+  - `POST /creative/generate` — body: `product_name`, `product_description`, optional `objective`, `target_platform`, `creative_type`, `tone`, `n_variants`. Returns AI-generated ad creative variants with copy, descriptions, headlines, CTAs, and performance rationale. Uses Gemini when `GEMINI_API_KEY` is set; falls back to template-based creatives otherwise.
 
 ---
 
@@ -178,6 +179,12 @@ Location: `backend/main.py`
     - `estimated_values` and `pulls` per arm
     - `history` of decisions.
 
+- `POST /creative/generate`
+  - Body: `CreativeRequest` (product_name, product_description, objective, target_platform, creative_type, tone, n_variants).
+  - When `GEMINI_API_KEY` is set, uses Google Gemini (free tier) to generate ad creative variants optimized for the simulation personas.
+  - Without the key, returns template-based creatives with a link to get a free API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+  - Returns: `variants[]` (ad_copy, creative_description, headline, cta, rationale), `suggested_campaign`, and `strategy_notes`.
+
 - `POST /calibration/update`
   - Body: `CalibrationRequest` (historical results).
   - Returns aggregated priors by platform + objective.
@@ -299,6 +306,7 @@ Location: `dashboard/`
   - Quick navigation to the main tools.
 
 - `app/campaign-builder/page.tsx` — **Campaign Builder**
+  - **AI Creative Generator** panel — describe your product and tone, click "Generate Creative" to get Gemini-powered ad copy, creative descriptions, headlines, and CTAs with performance rationale. Each variant has a "Use this" button to load it into the campaign form.
   - Form-based UI for:
     - Objective, platform, creative type.
     - Budget and age range.
@@ -335,6 +343,24 @@ npm run dev
 ```
 
 Open `http://localhost:3000` in your browser. The current dashboard pages use **demo data** from `src/lib/demo-data.ts`. To use live simulation data, wire the Campaign Builder and Simulation Results pages to `POST /simulation/run` and `POST /personas/generate` (backend at `http://localhost:8000`).
+
+---
+
+## AI creative generation (Gemini)
+
+The Campaign Builder includes a "Generate Creative with AI" panel that uses Google Gemini to create ad copy variants tailored to the simulation engine's personas.
+
+**Setup (optional — works without it using template fallbacks):**
+
+1. Get a free API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Set the environment variable before starting the backend:
+
+```bash
+export GEMINI_API_KEY="your-key-here"
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+For Render deployment, add `GEMINI_API_KEY` as an environment variable in your service settings.
 
 ---
 

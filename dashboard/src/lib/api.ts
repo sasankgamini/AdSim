@@ -111,6 +111,40 @@ export async function generatePersonas(
   return data.personas;
 }
 
+export interface CreativeRequest {
+  product_name: string;
+  product_description: string;
+  objective?: string;
+  target_platform?: string;
+  creative_type?: string;
+  target_audience?: string;
+  target_interests?: string[];
+  budget?: number;
+  tone?: string;
+  n_variants?: number;
+}
+
+export interface CreativeVariant {
+  variant_name: string;
+  ad_copy: string;
+  creative_description: string;
+  headline: string;
+  cta: string;
+  rationale: string;
+}
+
+export interface CreativeResponse {
+  variants: CreativeVariant[];
+  suggested_campaign: Partial<CampaignPayload> & { name?: string };
+  strategy_notes: string;
+}
+
+export async function generateCreative(
+  payload: CreativeRequest,
+): Promise<CreativeResponse> {
+  return post<CreativeResponse>("/creative/generate", payload);
+}
+
 export function histogramToBuckets(
   hist: Histogram,
   formatLabel: (v: number) => string = (v) => v.toFixed(3),

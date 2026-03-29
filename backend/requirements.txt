@@ -8,3 +8,4 @@ scikit-learn
 transformers
 python-multipart
 playwright
+google-genai
