@@ -34,7 +34,7 @@ export default function DashboardLayout({
             <div className="space-y-0.5">
               <div className="text-xs font-medium">Workspace</div>
               <div className="text-xs text-[hsl(var(--muted-fg))]">
-                Demo data
+                Live simulation
               </div>
             </div>
             <ThemeToggle />

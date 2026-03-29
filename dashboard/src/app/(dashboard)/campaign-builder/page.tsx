@@ -1,194 +1,350 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Sparkles, Wand2 } from "lucide-react";
+import { Sparkles, Wand2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { type Platform, personas, platforms } from "@/lib/demo-data";
+import {
+  type CampaignPayload,
+  type SimulationResult,
+  runSimulation,
+} from "@/lib/api";
+import { exampleCampaigns } from "@/lib/example-campaigns";
+import { cn } from "@/lib/utils";
 
 export default function CampaignBuilderPage() {
-  const router = useRouter();
-  const [name, setName] = React.useState("Spring Launch — AI Writing Tool");
-  const [objective, setObjective] = React.useState("Conversions");
-  const [platform, setPlatform] = React.useState<Platform>("Meta");
-  const [personaId, setPersonaId] = React.useState(personas[0]?.id ?? "p1");
-  const [budget, setBudget] = React.useState(12000);
-  const selectedPersona = personas.find((p) => p.id === personaId) ?? personas[0];
+  const [campaign, setCampaign] = React.useState<CampaignPayload>(
+    exampleCampaigns[0].campaign,
+  );
+  const [nPersonas, setNPersonas] = React.useState(1000);
+  const [nSims, setNSims] = React.useState(10000);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [result, setResult] = React.useState<SimulationResult | null>(null);
+  const [selectedExample, setSelectedExample] = React.useState(
+    exampleCampaigns[0].id,
+  );
+  const [showExamples, setShowExamples] = React.useState(true);
+
+  function loadExample(id: string) {
+    const ex = exampleCampaigns.find((e) => e.id === id);
+    if (!ex) return;
+    setCampaign(ex.campaign);
+    setNPersonas(ex.n_personas);
+    setNSims(ex.n_simulations);
+    setSelectedExample(id);
+    setResult(null);
+    setError(null);
+  }
+
+  async function handleRun() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await runSimulation({
+        campaign,
+        n_personas: nPersonas,
+        n_simulations: nSims,
+      });
+      setResult(res);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Simulation failed. Is the backend running on localhost:8000?",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const ex = exampleCampaigns.find((e) => e.id === selectedExample);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Campaign Builder"
-        subtitle="Draft a campaign spec and run fast simulations across personas and platforms."
+        subtitle="Pick an example ad creative or build your own, then run a real Monte Carlo simulation with synthetic personas."
         right={
-          <Button onClick={() => router.push("/simulation-results")}>
-            <Sparkles size={16} />
-            Run Simulation
+          <Button onClick={handleRun} disabled={loading}>
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+            {loading ? "Simulating…" : "Run Simulation"}
           </Button>
         }
       />
 
+      {/* Example campaigns */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <div className="space-y-1">
+            <CardTitle>Example Ad Creatives</CardTitle>
+            <div className="text-sm text-[hsl(var(--muted-fg))]">
+              Pre-built campaigns designed to show how different creatives, platforms, and audiences affect performance.
+            </div>
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => setShowExamples((v) => !v)}>
+            {showExamples ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            {showExamples ? "Hide" : "Show"}
+          </Button>
+        </CardHeader>
+        {showExamples && (
+          <CardContent className="space-y-3">
+            {exampleCampaigns.map((ec) => (
+              <button
+                key={ec.id}
+                type="button"
+                onClick={() => loadExample(ec.id)}
+                className={cn(
+                  "focus-ring w-full rounded-2xl border p-4 text-left transition-all",
+                  ec.id === selectedExample
+                    ? "border-[hsl(var(--border))] bg-[hsl(var(--card)/0.55)] shadow-[0_18px_40px_hsl(var(--shadow)/0.18)]"
+                    : "border-[hsl(var(--border)/0.55)] bg-[hsl(var(--card)/0.35)] hover:-translate-y-px hover:border-[hsl(var(--border))]",
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold">{ec.label}</div>
+                    <div className="mt-1 text-sm text-[hsl(var(--muted-fg))]">{ec.description}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge tone="accent">{ec.campaign.target_platform}</Badge>
+                    <Badge tone="neutral">{ec.campaign.creative_type}</Badge>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-[hsl(var(--muted-fg))]">
+                  <span className="font-medium text-[hsl(var(--fg))]">Why it works:</span> {ec.why}
+                </div>
+              </button>
+            ))}
+          </CardContent>
+        )}
+      </Card>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Campaign spec form */}
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div className="space-y-1">
-              <CardTitle>Campaign spec</CardTitle>
+              <CardTitle>Campaign Spec</CardTitle>
               <div className="text-sm text-[hsl(var(--muted-fg))]">
-                Structured inputs that the simulator can sample.
+                These inputs define what the Monte Carlo simulator tests against {nPersonas.toLocaleString()} synthetic personas.
               </div>
             </div>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setName("Notion-style landing refresh");
-                setObjective("Signups");
-                setPlatform("Google");
-                setPersonaId("p1");
-                setBudget(18000);
-              }}
-            >
+            <Button variant="secondary" onClick={() => loadExample(exampleCampaigns[0].id)}>
               <Wand2 size={16} />
-              Autofill
+              Reset
             </Button>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">
-                  Campaign name
-                </div>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Campaign name</div>
+                <Input value={campaign.name} onChange={(e) => setCampaign((c) => ({ ...c, name: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">
-                  Objective
-                </div>
-                <Select value={objective} onChange={(e) => setObjective(e.target.value)}>
-                  <option>Conversions</option>
-                  <option>Signups</option>
-                  <option>Leads</option>
-                  <option>Awareness</option>
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Objective</div>
+                <Select value={campaign.objective} onChange={(e) => setCampaign((c) => ({ ...c, objective: e.target.value as CampaignPayload["objective"] }))}>
+                  <option value="awareness">Awareness</option>
+                  <option value="traffic">Traffic</option>
+                  <option value="leads">Leads</option>
+                  <option value="sales">Sales</option>
                 </Select>
               </div>
               <div className="space-y-2">
-                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">
-                  Platform
-                </div>
-                <Select
-                  value={platform}
-                  onChange={(e) => {
-                    const v = e.target.value as Platform;
-                    if (platforms.includes(v)) setPlatform(v);
-                  }}
-                >
-                  {platforms.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Platform</div>
+                <Select value={campaign.target_platform} onChange={(e) => setCampaign((c) => ({ ...c, target_platform: e.target.value as CampaignPayload["target_platform"] }))}>
+                  <option value="Google">Google</option>
+                  <option value="Meta">Meta</option>
+                  <option value="TikTok">TikTok</option>
                 </Select>
               </div>
               <div className="space-y-2">
-                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">
-                  Primary persona
-                </div>
-                <Select value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
-                  {personas.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} · {p.segment}
-                    </option>
-                  ))}
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Creative type</div>
+                <Select value={campaign.creative_type} onChange={(e) => setCampaign((c) => ({ ...c, creative_type: e.target.value as CampaignPayload["creative_type"] }))}>
+                  <option value="image">Image</option>
+                  <option value="video">Video</option>
+                  <option value="carousel">Carousel</option>
+                  <option value="text">Text</option>
                 </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Budget ($)</div>
+                <Input type="number" value={campaign.budget} onChange={(e) => setCampaign((c) => ({ ...c, budget: Number(e.target.value) || 0 }))} />
+              </div>
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Min age</div>
+                <Input type="number" value={campaign.target_age_min ?? 18} onChange={(e) => setCampaign((c) => ({ ...c, target_age_min: Number(e.target.value) || 18 }))} />
+              </div>
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Max age</div>
+                <Input type="number" value={campaign.target_age_max ?? 65} onChange={(e) => setCampaign((c) => ({ ...c, target_age_max: Number(e.target.value) || 65 }))} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">
-                  Weekly budget
-                </div>
-                <div className="text-sm font-medium">${budget.toLocaleString()}</div>
-              </div>
-              <input
-                className="w-full accent-[hsl(var(--accent))]"
-                type="range"
-                min={2000}
-                max={50000}
-                step={500}
-                value={budget}
-                onChange={(e) => setBudget(Number(e.target.value))}
+              <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Target interests (comma-separated)</div>
+              <Input
+                value={(campaign.target_interests ?? []).join(", ")}
+                onChange={(e) => setCampaign((c) => ({ ...c, target_interests: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) }))}
+                placeholder="fitness, startups, beauty"
               />
-              <div className="flex gap-2">
-                <Badge tone="accent">AI creative</Badge>
-                <Badge tone="neutral">Auto-bidding</Badge>
-                <Badge tone="neutral">Holdout 5%</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Live preview</CardTitle>
-            <div className="text-sm text-[hsl(var(--muted-fg))]">
-              What the simulator will assume.
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <div className="text-xs text-[hsl(var(--muted-fg))]">Summary</div>
-              <div className="text-sm font-medium">{name}</div>
               <div className="text-xs text-[hsl(var(--muted-fg))]">
-                {objective} on {platform} · ${budget.toLocaleString()}/wk
+                Available: fitness, gaming, finance, travel, beauty, startups, parenting, education, sports, food
               </div>
             </div>
-            <div className="rounded-2xl border border-[hsl(var(--border)/0.6)] bg-[hsl(var(--card)/0.35)] p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold">{selectedPersona?.name}</div>
-                <Badge tone={selectedPersona?.intent === "High" ? "good" : "neutral"}>
-                  {selectedPersona?.intent ?? "—"} intent
-                </Badge>
+
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Ad copy</div>
+              <textarea
+                className="focus-ring w-full rounded-xl border border-[hsl(var(--border)/0.7)] bg-transparent px-3 py-2 text-sm"
+                rows={2}
+                value={campaign.ad_copy}
+                onChange={(e) => setCampaign((c) => ({ ...c, ad_copy: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Creative description</div>
+              <textarea
+                className="focus-ring w-full rounded-xl border border-[hsl(var(--border)/0.7)] bg-transparent px-3 py-2 text-sm"
+                rows={2}
+                value={campaign.creative_description}
+                onChange={(e) => setCampaign((c) => ({ ...c, creative_description: e.target.value }))}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Synthetic personas</div>
+                <Input type="number" value={nPersonas} onChange={(e) => setNPersonas(Number(e.target.value) || 1000)} />
               </div>
-              <div className="mt-2 text-sm text-[hsl(var(--muted-fg))]">
-                {selectedPersona?.tagline}
-              </div>
-              <div className="mt-3 space-y-2">
-                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">
-                  Channel affinity
-                </div>
-                <div className="space-y-2">
-                  {selectedPersona?.channels.map((c) => (
-                    <div key={c.name} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[hsl(var(--muted-fg))]">{c.name}</span>
-                        <span className="font-medium">
-                          {Math.round(c.affinity * 100)}%
-                        </span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-[hsl(var(--muted)/0.9)]">
-                        <div
-                          className="h-full rounded-full bg-[hsl(var(--accent))]"
-                          style={{ width: `${Math.round(c.affinity * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">Monte Carlo iterations</div>
+                <Input type="number" value={nSims} onChange={(e) => setNSims(Number(e.target.value) || 10000)} />
               </div>
             </div>
-            <Button className="w-full" onClick={() => router.push("/simulation-results")}>
-              <Sparkles size={16} />
-              Simulate now
+
+            <Button onClick={handleRun} disabled={loading} className="w-full">
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+              {loading
+                ? `Running ${nSims.toLocaleString()} simulations across ${nPersonas.toLocaleString()} personas…`
+                : `Run Monte Carlo (${nSims.toLocaleString()} sims × ${nPersonas.toLocaleString()} personas)`}
             </Button>
           </CardContent>
         </Card>
+
+        {/* Results panel */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Simulation Results</CardTitle>
+              <div className="text-sm text-[hsl(var(--muted-fg))]">
+                {result
+                  ? `${result.meta.n_simulations.toLocaleString()} Monte Carlo iterations × ${result.meta.n_personas.toLocaleString()} personas`
+                  : "Run a simulation to see predicted performance."}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {error && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                  {error}
+                </div>
+              )}
+              {!result && !error && (
+                <p className="text-sm text-[hsl(var(--muted-fg))]">
+                  Select an example campaign or define your own, then click &ldquo;Run Simulation&rdquo;.
+                  The engine generates {nPersonas.toLocaleString()} synthetic personas with realistic demographics,
+                  then each of {nSims.toLocaleString()} Monte Carlo iterations simulates every persona seeing your ad
+                  and deciding whether to click and convert based on their attributes.
+                </p>
+              )}
+              {result && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <ResultCard
+                      label="CTR"
+                      value={`${(result.expected.ctr_mean * 100).toFixed(2)}%`}
+                      detail={`${(result.distributions.ctr.summary.ci_low * 100).toFixed(2)}% – ${(result.distributions.ctr.summary.ci_high * 100).toFixed(2)}%`}
+                    />
+                    <ResultCard
+                      label="ROI"
+                      value={`${result.expected.roi_mean.toFixed(2)}x`}
+                      detail={`${result.distributions.roi.summary.ci_low.toFixed(2)}x – ${result.distributions.roi.summary.ci_high.toFixed(2)}x`}
+                    />
+                    <ResultCard
+                      label="Avg Clicks"
+                      value={result.expected.avg_clicks.toFixed(0)}
+                      detail={`of ${result.meta.impressions_per_sim} impressions`}
+                    />
+                    <ResultCard
+                      label="Avg Conversions"
+                      value={result.expected.avg_conversions.toFixed(1)}
+                      detail={`CVR ${(result.expected.conversion_rate_mean * 100).toFixed(2)}%`}
+                    />
+                    <ResultCard
+                      label="Avg Spend"
+                      value={`$${result.expected.avg_spend.toFixed(0)}`}
+                      detail={`CPC $${result.meta.cpc.toFixed(2)}`}
+                    />
+                    <ResultCard
+                      label="Avg Revenue"
+                      value={`$${result.expected.avg_revenue.toFixed(0)}`}
+                      detail={`per sim iteration`}
+                    />
+                  </div>
+                  <div className="rounded-xl border border-[hsl(var(--border)/0.6)] bg-[hsl(var(--card)/0.35)] p-3">
+                    <div className="text-xs font-medium text-[hsl(var(--muted-fg))]">
+                      How this works
+                    </div>
+                    <div className="mt-1 text-xs text-[hsl(var(--muted-fg))]">
+                      Each iteration: {result.meta.n_personas} synthetic personas (with age, income, interests,
+                      platform preference, purchase intent, ad fatigue, attention span) each see your ad.
+                      Click probability = base CTR + interest overlap + platform match + creative factor
+                      + attention boost − fatigue penalty. Conversion probability depends on purchase intent,
+                      income, and creative type. Budget caps clicks at {result.meta.max_clicks_by_budget}
+                      (${result.meta.budget} ÷ ${result.meta.cpc.toFixed(2)} CPC).
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {ex && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Why this creative works</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-[hsl(var(--muted-fg))]">{ex.why}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge tone="accent">{ex.campaign.target_platform}</Badge>
+                  <Badge tone="neutral">{ex.campaign.creative_type}</Badge>
+                  <Badge tone="neutral">{ex.campaign.objective}</Badge>
+                  {(ex.campaign.target_interests ?? []).map((i) => (
+                    <Badge key={i} tone="good">{i}</Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
+function ResultCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-xl border border-[hsl(var(--border)/0.6)] bg-[hsl(var(--card)/0.35)] p-3">
+      <div className="text-xs text-[hsl(var(--muted-fg))]">{label}</div>
+      <div className="mt-1 text-xl font-semibold tracking-tight">{value}</div>
+      <div className="mt-0.5 text-xs text-[hsl(var(--muted-fg))]">{detail}</div>
+    </div>
+  );
+}
