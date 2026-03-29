@@ -123,20 +123,29 @@ async def generate_creative(req: CreativeRequest) -> dict:
     if not api_key:
         return _fallback_response(req)
 
-    from google import genai
+    try:
+        from google import genai
 
-    client = genai.Client(api_key=api_key)
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=_build_user_prompt(req),
-        config={
-            "system_instruction": SYSTEM_PROMPT,
-            "temperature": 0.8,
-        },
-    )
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=_build_user_prompt(req),
+            config={
+                "system_instruction": SYSTEM_PROMPT,
+                "temperature": 0.8,
+            },
+        )
 
-    parsed = _parse_gemini_response(response.text)
-    return parsed
+        parsed = _parse_gemini_response(response.text)
+        return parsed
+    except Exception:
+        fallback = _fallback_response(req)
+        fallback["strategy_notes"] = (
+            "Gemini API call failed (rate limit or network error). "
+            "Showing template-based creatives instead. "
+            "The simulation results are still fully real."
+        )
+        return fallback
 
 
 def _fallback_response(req: CreativeRequest) -> dict:

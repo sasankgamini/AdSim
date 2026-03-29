@@ -111,6 +111,56 @@ export async function generatePersonas(
   return data.personas;
 }
 
+export interface DiscoveryRequest {
+  product_name: string;
+  product_description?: string;
+  budget?: number;
+  target_interests?: string[];
+  target_age_min?: number;
+  target_age_max?: number;
+  n_personas?: number;
+  sims_per_combo?: number;
+  seed?: number;
+}
+
+export interface DiscoveryRanking {
+  rank: number;
+  platform: string;
+  creative_type: string;
+  ctr_mean: number;
+  roi_mean: number;
+  conversion_rate_mean: number;
+  avg_clicks: number;
+  avg_conversions: number;
+  avg_spend: number;
+  avg_revenue: number;
+  ctr_ci: [number, number];
+  roi_ci: [number, number];
+}
+
+export interface DiscoveryResult {
+  n_personas: number;
+  combinations_tested: number;
+  sims_per_combo: number;
+  total_simulations: number;
+  rankings: DiscoveryRanking[];
+  best: DiscoveryRanking | null;
+  persona_summary: {
+    avg_purchase_intent: number;
+    avg_ad_fatigue: number;
+    avg_attention_span: number;
+    interest_distribution: Record<string, number>;
+    platform_distribution: Record<string, number>;
+    age_distribution: Record<string, number>;
+  };
+}
+
+export async function runDiscovery(
+  payload: DiscoveryRequest,
+): Promise<DiscoveryResult> {
+  return post<DiscoveryResult>("/discover/run", payload);
+}
+
 export interface CreativeRequest {
   product_name: string;
   product_description: string;

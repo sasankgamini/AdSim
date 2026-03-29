@@ -1,5 +1,8 @@
 from typing import Optional
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -76,11 +79,17 @@ async def simulation_endpoint(payload: SimulationRunBody) -> dict:
 
 
 from backend.creative_generator import CreativeRequest, generate_creative
+from backend.discovery import DiscoveryRequest, run_discovery
 
 
 @app.post("/creative/generate")
 async def creative_endpoint(payload: CreativeRequest) -> dict:
     return await generate_creative(payload)
+
+
+@app.post("/discover/run")
+async def discovery_endpoint(payload: DiscoveryRequest) -> dict:
+    return run_discovery(payload)
 
 
 if __name__ == "__main__":

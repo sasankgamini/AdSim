@@ -11,3 +11,6 @@ data/
 
 playwright/.auth/
 
+.env
+.env.local
+

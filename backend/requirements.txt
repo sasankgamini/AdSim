@@ -7,5 +7,6 @@ numpy
 scikit-learn
 transformers
 python-multipart
+python-dotenv
 playwright
 google-genai
